@@ -24,6 +24,15 @@ class LISEOFP_API APlayerCharacter : public ABaseCharacter
 public:
 	APlayerCharacter();
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parts")
+	USkeletalMeshComponent* HeadMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parts")
+	USkeletalMeshComponent* HairMesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Parts")
+	USkeletalMeshComponent* ArmsMesh;
+
 protected:
 	// ~ Begin APawn InterFace
 	virtual void PossessedBy(AController* NewController) override;

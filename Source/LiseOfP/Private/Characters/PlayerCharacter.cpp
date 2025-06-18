@@ -12,6 +12,27 @@
 
 APlayerCharacter::APlayerCharacter()
 {
+	// === 메인 바디 (애니메이션 담당) ===
+	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
+	// GetMesh()에 바디 스켈레탈 메시와 애니메이션 BP 설정
+
+	// === 추가 부위들 (뼈대만 공유) ===
+	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
+	HeadMesh->SetupAttachment(GetMesh()); 
+	HeadMesh->SetMasterPoseComponent(GetMesh()); 
+
+	HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HairMesh"));
+	HairMesh->SetupAttachment(GetMesh());
+	HairMesh->SetMasterPoseComponent(GetMesh()); 
+
+	ArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmsMesh"));
+	ArmsMesh->SetupAttachment(GetMesh());
+	ArmsMesh->SetMasterPoseComponent(GetMesh()); 
+	HeadMesh->SetForcedLOD(1); // 항상 최고 품질 LOD 사용
+	ArmsMesh->SetForcedLOD(1);
+
+
+
 	// 캡슐 컴포넌트 크기 설정 (콜리전 범위)
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
