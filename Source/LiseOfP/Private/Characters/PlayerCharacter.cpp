@@ -28,9 +28,6 @@ APlayerCharacter::APlayerCharacter()
 	ArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmsMesh"));
 	ArmsMesh->SetupAttachment(GetMesh());
 	ArmsMesh->SetMasterPoseComponent(GetMesh()); 
-	HeadMesh->SetForcedLOD(1); // 항상 최고 품질 LOD 사용
-	ArmsMesh->SetForcedLOD(1);
-
 
 
 	// 캡슐 컴포넌트 크기 설정 (콜리전 범위)
