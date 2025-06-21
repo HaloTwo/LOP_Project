@@ -35,25 +35,29 @@ APlayerCharacter::APlayerCharacter()
 
 	// 컨트롤러 회전값을 직접 캐릭터에 반영하지 않음 (카메라 회전에 영향을 주지 않음)
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// === 카메라 붐(Spring Arm) 설정 ===
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetRootComponent()); // 루트 컴포넌트(캡슐)에 붙임
-	CameraBoom->TargetArmLength = 200.f;             // 캐릭터로부터의 거리 (3인칭 카메라 거리)
-	CameraBoom->SocketOffset = FVector(0.f, 55.f, 65.f); // 카메라 위치 오프셋 (캐릭터 오른쪽 위로 약간 치우침)
-	CameraBoom->bUsePawnControlRotation = true;      // 컨트롤러의 회전을 SpringArm에 적용 (카메라 회전 가능)
+	// SpringArm 설정 (원형 궤도용)
+	CameraBoom->SetupAttachment(GetRootComponent());  // 캐릭터 중심에 붙이기
+	CameraBoom->TargetArmLength = 300.f;              // 거리
+	CameraBoom->bUsePawnControlRotation = false;      // 컨트롤러 무시
+	CameraBoom->bDoCollisionTest = true;              // 벽 충돌 감지
+
+	// === 회전 제어 ===
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationRoll = false;
 
 	// === 실제 카메라 설정 ===
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
-	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // SpringArm 끝에 붙임
-	FollowCamera->bUsePawnControlRotation = false;   // 카메라는 자체 회전 X (SpringArm의 회전만 따름)
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false; // 카메라는 자체 회전 안 함
 
-	// === 이동 관련 설정 ===
-	GetCharacterMovement()->bOrientRotationToMovement = true; // 이동 방향으로 자동 회전
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f); // 회전 속도
-	GetCharacterMovement()->MaxWalkSpeed = 400.f;             // 걷기 속도
+	// === 이동 관련 ===
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
+	GetCharacterMovement()->bOrientRotationToMovement = false;  // 자동 회전 끄기
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f); // 빠른 회전
+	GetCharacterMovement()->MaxWalkSpeed = 300.f;             // 걷기 속도
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f; // 멈출 때 감속 정도
 }
 
@@ -87,40 +91,62 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// 컴포넌트 연결 상태 확인
+	UE_LOG(LogTemp, Warning, TEXT("CameraBoom exists: %s"), CameraBoom ? TEXT("YES") : TEXT("NO"));
+	UE_LOG(LogTemp, Warning, TEXT("FollowCamera exists: %s"), FollowCamera ? TEXT("YES") : TEXT("NO"));
+	UE_LOG(LogTemp, Warning, TEXT("Camera parent: %s"), FollowCamera->GetAttachParent() ? *FollowCamera->GetAttachParent()->GetName() : TEXT("NONE"));
+
+	// ViewTarget 확인
+	APlayerController* PC = Cast<APlayerController>(GetController());
+	if (PC)
+	{
+		AActor* ViewTarget = PC->GetViewTarget();
+		UE_LOG(LogTemp, Warning, TEXT("Current ViewTarget: %s"), ViewTarget ? *ViewTarget->GetName() : TEXT("NONE"));
+	}
 }
 
+// Input_Move - 카메라 기준 이동
 void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
-	const FRotator MovementRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+	float WalkSpeedRatio = 100.0f / 300.0f;
 
 	if (MovementVector.Y != 0.f)
 	{
-		const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
-
-		AddMovementInput(ForwardDirection, MovementVector.Y);
+		AddMovementInput(GetActorForwardVector(), MovementVector.Y * WalkSpeedRatio);
 	}
-
 	if (MovementVector.X != 0.f)
 	{
-		const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
+		AddMovementInput(GetActorRightVector(), MovementVector.X * WalkSpeedRatio);
 
-		AddMovementInput(RightDirection, MovementVector.X);
+		// 캐릭터만 90도 회전
+		FRotator NewRot = GetActorRotation();
+		NewRot.Yaw += (MovementVector.X > 0) ? 90.0f : -90.0f;
+		SetActorRotation(NewRot);
 	}
 }
 
+// Input_Look - 컨트롤러(카메라) 회전
 void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 {
 	const FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
 
-	if (LookAxisVector.X != 0.f)
+	if (LookAxisVector.X != 0.f || LookAxisVector.Y != 0.f)
 	{
-		AddControllerYawInput(LookAxisVector.X);
-	}
+		// SpringArm 자체를 회전시켜서 원형 궤도 만들기
+		FRotator CurrentRotation = CameraBoom->GetRelativeRotation();
 
-	if (LookAxisVector.Y != 0.f)
-	{
-		AddControllerPitchInput(LookAxisVector.Y);
+		// 수평 회전 (좌우로 원형)
+		CurrentRotation.Yaw += LookAxisVector.X;
+
+		// 수직 회전 (위아래)
+		CurrentRotation.Pitch += LookAxisVector.Y;
+		CurrentRotation.Pitch = FMath::Clamp(CurrentRotation.Pitch, -80.0f, 80.0f);
+
+		CameraBoom->SetRelativeRotation(CurrentRotation);
+
+		UE_LOG(LogTemp, Warning, TEXT("SpringArm Rotation: %s"), *CurrentRotation.ToString());
 	}
 }
 
