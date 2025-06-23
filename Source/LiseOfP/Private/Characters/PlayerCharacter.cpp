@@ -35,18 +35,17 @@ APlayerCharacter::APlayerCharacter()
 
 	// 컨트롤러 회전값을 직접 캐릭터에 반영하지 않음 (카메라 회전에 영향을 주지 않음)
 	bUseControllerRotationPitch = false;
-	bUseControllerRotationRoll = false;
-
-	// SpringArm 설정 (원형 궤도용)
-	CameraBoom->SetupAttachment(GetRootComponent());  // 캐릭터 중심에 붙이기
-	CameraBoom->TargetArmLength = 300.f;              // 거리
-	CameraBoom->bUsePawnControlRotation = false;      // 컨트롤러 무시
-	CameraBoom->bDoCollisionTest = true;              // 벽 충돌 감지
-
-	// === 회전 제어 ===
 	bUseControllerRotationYaw = false;
-	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
+
+	// === 카메라 붐(Spring Arm) 설정 ===
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(GetCapsuleComponent());
+	CameraBoom->TargetArmLength = 200.f;
+	CameraBoom->bUsePawnControlRotation = false;
+	CameraBoom->bInheritYaw = false;
+	CameraBoom->bInheritPitch = false;
+	CameraBoom->bInheritRoll = false;
 
 	// === 실제 카메라 설정 ===
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -54,8 +53,8 @@ APlayerCharacter::APlayerCharacter()
 	FollowCamera->bUsePawnControlRotation = false; // 카메라는 자체 회전 안 함
 
 	// === 이동 관련 ===
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	GetCharacterMovement()->bOrientRotationToMovement = false;  // 자동 회전 끄기
+	GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f); // 빠른 회전
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;             // 걷기 속도
 	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f; // 멈출 때 감속 정도
