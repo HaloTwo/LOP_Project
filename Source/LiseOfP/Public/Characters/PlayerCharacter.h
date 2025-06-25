@@ -42,6 +42,14 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
+	// 테스트용 변수
+	UPROPERTY(VisibleAnywhere, Category = "WalkState")
+	bool bWalk = false;
+
+	// 입력 함수 선언
+	UFUNCTION()
+	void Input_Walk();
+
 #pragma region Components
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera", meta = (AllowPrivateAccess = "true"))
 	USpringArmComponent* CameraBoom;

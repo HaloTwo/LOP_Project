@@ -18,46 +18,42 @@ APlayerCharacter::APlayerCharacter()
 
 	// === 추가 부위들 (뼈대만 공유) ===
 	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
-	HeadMesh->SetupAttachment(GetMesh()); 
-	HeadMesh->SetMasterPoseComponent(GetMesh()); 
+	HeadMesh->SetupAttachment(GetMesh());
+	HeadMesh->SetMasterPoseComponent(GetMesh());
 
 	HairMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HairMesh"));
 	HairMesh->SetupAttachment(GetMesh());
-	HairMesh->SetMasterPoseComponent(GetMesh()); 
+	HairMesh->SetMasterPoseComponent(GetMesh());
 
 	ArmsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("ArmsMesh"));
 	ArmsMesh->SetupAttachment(GetMesh());
-	ArmsMesh->SetMasterPoseComponent(GetMesh()); 
+	ArmsMesh->SetMasterPoseComponent(GetMesh());
 
 
 	// 캡슐 컴포넌트 크기 설정 (콜리전 범위)
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
-	// 컨트롤러 회전값을 직접 캐릭터에 반영하지 않음 (카메라 회전에 영향을 주지 않음)
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// === 카메라 붐(Spring Arm) 설정 ===
+	// 캐릭터가 움직일 때 카메라가 따라오도록 설정
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
-	CameraBoom->SetupAttachment(GetCapsuleComponent());
+	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->TargetArmLength = 200.f;
-	CameraBoom->bUsePawnControlRotation = false;
-	CameraBoom->bInheritYaw = false;
-	CameraBoom->bInheritPitch = false;
-	CameraBoom->bInheritRoll = false;
+	CameraBoom->SocketOffset = FVector(0.f, 55.f, 65.f);
+	CameraBoom->bUsePawnControlRotation = true;
 
-	// === 실제 카메라 설정 ===
+	// 카메라가 캐릭터의 회전을 따라가도록 설정
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false; // 카메라는 자체 회전 안 함
+	FollowCamera->bUsePawnControlRotation = false;
 
-	// === 이동 관련 ===
-	GetCharacterMovement()->bOrientRotationToMovement = false;  // 자동 회전 끄기
-	GetCharacterMovement()->bUseControllerDesiredRotation = false;
-	GetCharacterMovement()->RotationRate = FRotator(0.f, 720.f, 0.f); // 빠른 회전
-	GetCharacterMovement()->MaxWalkSpeed = 300.f;             // 걷기 속도
-	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f; // 멈출 때 감속 정도
+	// 캐릭터 이동 설정
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
+	GetCharacterMovement()->MaxWalkSpeed = 300.f;
+	GetCharacterMovement()->BrakingDecelerationWalking = 2000.f;
 }
 
 void APlayerCharacter::PossessedBy(AController* NewController)
@@ -81,72 +77,63 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	UPlayerInputComponent* MyPlayerInputComponent = CastChecked<UPlayerInputComponent>(PlayerInputComponent);
 
+	// 기본 액션 바인딩
 	MyPlayerInputComponent->BindNativeInputAction(InputConfigDataAsset, LOP_GameplayTags::InputTag_Move, ETriggerEvent::Triggered, this, &APlayerCharacter::Input_Move);
 	MyPlayerInputComponent->BindNativeInputAction(InputConfigDataAsset, LOP_GameplayTags::InputTag_Look, ETriggerEvent::Triggered, this, &APlayerCharacter::Input_Look);
+	
+	// 걸음/뛰기 토글 액션 바인딩
+	MyPlayerInputComponent->BindNativeInputAction(InputConfigDataAsset, LOP_GameplayTags::InputTag_Walk, ETriggerEvent::Started, this, &APlayerCharacter::Input_Walk);
 
+	// 능력 입력 액션 바인딩
 	MyPlayerInputComponent->BindAbilityInputAction(InputConfigDataAsset, this, &ThisClass::Input_AbilityInputPressed, &ThisClass::Input_AbilityInputReleased);
 }
 
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// 컴포넌트 연결 상태 확인
-	UE_LOG(LogTemp, Warning, TEXT("CameraBoom exists: %s"), CameraBoom ? TEXT("YES") : TEXT("NO"));
-	UE_LOG(LogTemp, Warning, TEXT("FollowCamera exists: %s"), FollowCamera ? TEXT("YES") : TEXT("NO"));
-	UE_LOG(LogTemp, Warning, TEXT("Camera parent: %s"), FollowCamera->GetAttachParent() ? *FollowCamera->GetAttachParent()->GetName() : TEXT("NONE"));
-
-	// ViewTarget 확인
-	APlayerController* PC = Cast<APlayerController>(GetController());
-	if (PC)
-	{
-		AActor* ViewTarget = PC->GetViewTarget();
-		UE_LOG(LogTemp, Warning, TEXT("Current ViewTarget: %s"), ViewTarget ? *ViewTarget->GetName() : TEXT("NONE"));
-	}
 }
 
-// Input_Move - 카메라 기준 이동
 void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
 {
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
-	float WalkSpeedRatio = 100.0f / 300.0f;
+	const FRotator MovementRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
+
+	// TEST 변수에 따라 속도 조절
+	const float MovementScale = bWalk ? 0.375f : 1.0f;
 
 	if (MovementVector.Y != 0.f)
 	{
-		AddMovementInput(GetActorForwardVector(), MovementVector.Y * WalkSpeedRatio);
+		const FVector ForwardDirection = MovementRotation.RotateVector(FVector::ForwardVector);
+		AddMovementInput(ForwardDirection, MovementVector.Y * MovementScale);
 	}
+
 	if (MovementVector.X != 0.f)
 	{
-		AddMovementInput(GetActorRightVector(), MovementVector.X * WalkSpeedRatio);
-
-		// 캐릭터만 90도 회전
-		FRotator NewRot = GetActorRotation();
-		NewRot.Yaw += (MovementVector.X > 0) ? 90.0f : -90.0f;
-		SetActorRotation(NewRot);
+		const FVector RightDirection = MovementRotation.RotateVector(FVector::RightVector);
+		AddMovementInput(RightDirection, MovementVector.X * MovementScale);
 	}
 }
 
-// Input_Look - 컨트롤러(카메라) 회전
 void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 {
 	const FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
 
-	if (LookAxisVector.X != 0.f || LookAxisVector.Y != 0.f)
+	// X축: 좌우 회전 (Yaw)
+	if (LookAxisVector.X != 0.f)
 	{
-		// SpringArm 자체를 회전시켜서 원형 궤도 만들기
-		FRotator CurrentRotation = CameraBoom->GetRelativeRotation();
-
-		// 수평 회전 (좌우로 원형)
-		CurrentRotation.Yaw += LookAxisVector.X;
-
-		// 수직 회전 (위아래)
-		CurrentRotation.Pitch += LookAxisVector.Y;
-		CurrentRotation.Pitch = FMath::Clamp(CurrentRotation.Pitch, -80.0f, 80.0f);
-
-		CameraBoom->SetRelativeRotation(CurrentRotation);
-
-		UE_LOG(LogTemp, Warning, TEXT("SpringArm Rotation: %s"), *CurrentRotation.ToString());
+		AddControllerYawInput(LookAxisVector.X);
 	}
+
+	// Y축: 상하 회전 (Pitch)
+	if (LookAxisVector.Y != 0.f)
+	{
+		AddControllerPitchInput(LookAxisVector.Y);
+	}
+}
+
+void APlayerCharacter::Input_Walk()
+{
+	bWalk = !bWalk;
 }
 
 void APlayerCharacter::Input_AbilityInputPressed(FGameplayTag InputTag)
