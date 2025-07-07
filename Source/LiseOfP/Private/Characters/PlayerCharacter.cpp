@@ -60,6 +60,23 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 {
 	Super::PossessedBy(NewController);
 
+	if (AbilitySystemComponent && AttributeSet)
+	{
+		UE_LOG(LogTemp, Warning, TEXT(" Both AbilitySystemComponent and AttributeSet are valid."));
+	}
+	else
+	{
+		if (!AbilitySystemComponent)
+		{
+			UE_LOG(LogTemp, Warning, TEXT(" AbilitySystemComponent is NULL"));
+		}
+		if (!AttributeSet)
+		{
+			UE_LOG(LogTemp, Warning, TEXT(" AttributeSet is NULL"));
+		}
+	}
+
+
 	// GAS 컨트롤러 할당이나 초기화 같은 것 여기서 가능
 }
 
@@ -91,6 +108,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("BeginPlay"));
 }
 
 void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
