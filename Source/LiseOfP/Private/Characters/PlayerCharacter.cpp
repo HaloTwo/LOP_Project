@@ -10,13 +10,22 @@
 #include "Components/Input/PlayerInputComponent.h"
 #include "LOP_GameplayTags.h"
 
+// ìƒì„±ì: ì»´í¬ë„ŒíŠ¸ ì´ˆê¸°í™”
 APlayerCharacter::APlayerCharacter()
 {
-	// === ¸ŞÀÎ ¹Ùµğ (¾Ö´Ï¸ŞÀÌ¼Ç ´ã´ç) ===
+// ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ìºë¦­í„°ë¥¼ ì†Œìœ í•  ë•Œ ì‹¤í–‰
+// í”Œë ˆì´ì–´ ì…ë ¥ ë°”ì¸ë”©
+// ê²Œì„ ì‹œì‘ ì‹œ ì´ˆê¸°í™”
+// ì´ë™ ì…ë ¥ ì²˜ë¦¬
+// ì¹´ë©”ë¼ íšŒì „ ì…ë ¥ ì²˜ë¦¬
+// ê±·ê¸° í† ê¸€ ì…ë ¥
+// ì–´ë¹Œë¦¬í‹° ì…ë ¥ ì‹œì‘ ì²˜ë¦¬
+// ì–´ë¹Œë¦¬í‹° ì…ë ¥ ì¢…ë£Œ ì²˜ë¦¬
+	// === ë©”ì¸ ë°”ë”” (ì• ë‹ˆë©”ì´ì…˜ ë‹´ë‹¹) ===
 	GetMesh()->SetAnimationMode(EAnimationMode::AnimationBlueprint);
-	// GetMesh()¿¡ ¹Ùµğ ½ºÄÌ·¹Å» ¸Ş½Ã¿Í ¾Ö´Ï¸ŞÀÌ¼Ç BP ¼³Á¤
+	// GetMesh()ì— ë°”ë”” ìŠ¤ì¼ˆë ˆíƒˆ ë©”ì‹œì™€ ì• ë‹ˆë©”ì´ì…˜ BP ì„¤ì •
 
-	// === Ãß°¡ ºÎÀ§µé (»À´ë¸¸ °øÀ¯) ===
+	// === ì¶”ê°€ ë¶€ìœ„ë“¤ (ë¼ˆëŒ€ë§Œ ê³µìœ ) ===
 	HeadMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("HeadMesh"));
 	HeadMesh->SetupAttachment(GetMesh());
 	HeadMesh->SetMasterPoseComponent(GetMesh());
@@ -30,26 +39,26 @@ APlayerCharacter::APlayerCharacter()
 	ArmsMesh->SetMasterPoseComponent(GetMesh());
 
 
-	// Ä¸½¶ ÄÄÆ÷³ÍÆ® Å©±â ¼³Á¤ (Äİ¸®Àü ¹üÀ§)
+	// ìº¡ìŠ ì»´í¬ë„ŒíŠ¸ í¬ê¸° ì„¤ì • (ì½œë¦¬ì „ ë²”ìœ„)
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
-	// Ä³¸¯ÅÍ°¡ ¿òÁ÷ÀÏ ¶§ Ä«¸Ş¶ó°¡ µû¶ó¿Àµµ·Ï ¼³Á¤
+	// ìºë¦­í„°ê°€ ì›€ì§ì¼ ë•Œ ì¹´ë©”ë¼ê°€ ë”°ë¼ì˜¤ë„ë¡ ì„¤ì •
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->TargetArmLength = 200.f;
 	CameraBoom->SocketOffset = FVector(0.f, 55.f, 65.f);
 	CameraBoom->bUsePawnControlRotation = true;
 
-	// Ä«¸Ş¶ó°¡ Ä³¸¯ÅÍÀÇ È¸ÀüÀ» µû¶ó°¡µµ·Ï ¼³Á¤
+	// ì¹´ë©”ë¼ê°€ ìºë¦­í„°ì˜ íšŒì „ì„ ë”°ë¼ê°€ë„ë¡ ì„¤ì •
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	FollowCamera->bUsePawnControlRotation = false;
 
-	// Ä³¸¯ÅÍ ÀÌµ¿ ¼³Á¤
+	// ìºë¦­í„° ì´ë™ ì„¤ì •
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
 	GetCharacterMovement()->MaxWalkSpeed = 300.f;
@@ -77,7 +86,7 @@ void APlayerCharacter::PossessedBy(AController* NewController)
 	}
 
 
-	// GAS ÄÁÆ®·Ñ·¯ ÇÒ´çÀÌ³ª ÃÊ±âÈ­ °°Àº °Í ¿©±â¼­ °¡´É
+	// GAS ì»¨íŠ¸ë¡¤ëŸ¬ í• ë‹¹ì´ë‚˜ ì´ˆê¸°í™” ê°™ì€ ê²ƒ ì—¬ê¸°ì„œ ê°€ëŠ¥
 }
 
 void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -94,14 +103,14 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	UPlayerInputComponent* MyPlayerInputComponent = CastChecked<UPlayerInputComponent>(PlayerInputComponent);
 
-	// ±âº» ¾×¼Ç ¹ÙÀÎµù
+	// ê¸°ë³¸ ì•¡ì…˜ ë°”ì¸ë”©
 	MyPlayerInputComponent->BindNativeInputAction(InputConfigDataAsset, LOP_GameplayTags::InputTag_Move, ETriggerEvent::Triggered, this, &APlayerCharacter::Input_Move);
 	MyPlayerInputComponent->BindNativeInputAction(InputConfigDataAsset, LOP_GameplayTags::InputTag_Look, ETriggerEvent::Triggered, this, &APlayerCharacter::Input_Look);
 	
-	// °ÉÀ½/¶Ù±â Åä±Û ¾×¼Ç ¹ÙÀÎµù
+	// ê±¸ìŒ/ë›°ê¸° í† ê¸€ ì•¡ì…˜ ë°”ì¸ë”©
 	MyPlayerInputComponent->BindNativeInputAction(InputConfigDataAsset, LOP_GameplayTags::InputTag_Walk, ETriggerEvent::Started, this, &APlayerCharacter::Input_Walk);
 
-	// ´É·Â ÀÔ·Â ¾×¼Ç ¹ÙÀÎµù
+	// ëŠ¥ë ¥ ì…ë ¥ ì•¡ì…˜ ë°”ì¸ë”©
 	MyPlayerInputComponent->BindAbilityInputAction(InputConfigDataAsset, this, &ThisClass::Input_AbilityInputPressed, &ThisClass::Input_AbilityInputReleased);
 }
 
@@ -117,7 +126,7 @@ void APlayerCharacter::Input_Move(const FInputActionValue& InputActionValue)
 	const FVector2D MovementVector = InputActionValue.Get<FVector2D>();
 	const FRotator MovementRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
 
-	// TEST º¯¼ö¿¡ µû¶ó ¼Óµµ Á¶Àı
+	// TEST ë³€ìˆ˜ì— ë”°ë¼ ì†ë„ ì¡°ì ˆ
 	const float MovementScale = bWalk ? 0.375f : 1.0f;
 
 	if (MovementVector.Y != 0.f)
@@ -137,13 +146,13 @@ void APlayerCharacter::Input_Look(const FInputActionValue& InputActionValue)
 {
 	const FVector2D LookAxisVector = InputActionValue.Get<FVector2D>();
 
-	// XÃà: ÁÂ¿ì È¸Àü (Yaw)
+	// Xì¶•: ì¢Œìš° íšŒì „ (Yaw)
 	if (LookAxisVector.X != 0.f)
 	{
 		AddControllerYawInput(LookAxisVector.X);
 	}
 
-	// YÃà: »óÇÏ È¸Àü (Pitch)
+	// Yì¶•: ìƒí•˜ íšŒì „ (Pitch)
 	if (LookAxisVector.Y != 0.f)
 	{
 		AddControllerPitchInput(LookAxisVector.Y);
