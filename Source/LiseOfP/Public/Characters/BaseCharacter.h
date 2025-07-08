@@ -11,32 +11,38 @@ class ULOP_AbilitySystemComponent;
 class ULOP_AttributeSet;
 
 UCLASS()
+// ëª¨ë“  ìºë¦­í„°ì˜ ê¸°ë³¸ í´ë˜ìŠ¤
 class LISEOFP_API ABaseCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
+// ê¸°ë³¸ ìƒì„±ì
 public:
 	ABaseCharacter();
 
 	// AbilitySystemComponent interface
+// AbilitySystemComponent ë°˜í™˜
 	virtual UAbilitySystemComponent* GetAbilitySystemComponent() const override;
 	// AbilitySystemComponent interface
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem")
+// GAS ì»´í¬ë„ŒíŠ¸
 	ULOP_AbilitySystemComponent* AbilitySystemComponent;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "AbilitySystem")
+// ì†ì„± ì„¸íŠ¸
 	ULOP_AttributeSet* AttributeSet;
 
 
 
+// ì»¨íŠ¸ë¡¤ëŸ¬ê°€ ë¹™ì˜ë  ë•Œ í˜¸ì¶œ
 	virtual void PossessedBy(AController* NewController) override;
 
 public:
-	//¾îºô¸®Æ¼ ½Ã½ºÅÛ ÄÄÆ÷³ÍÆ®¸¦ °¡Á®¿À´Â ÇÔ¼ö
+        // AbilitySystemComponent ì ‘ê·¼ í•¨ìˆ˜
 	FORCEINLINE ULOP_AbilitySystemComponent* GetBaseAbilitySystemComponent() const { return AbilitySystemComponent; }
 
-	//¾îÆ®¸®ºäÆ® ¼ÂÀ» °¡Á®¿À´Â ÇÔ¼ö
+        // AttributeSet ì ‘ê·¼ í•¨ìˆ˜
 	FORCEINLINE ULOP_AttributeSet* GetBaseAttributeSet() const { return AttributeSet; }
 };

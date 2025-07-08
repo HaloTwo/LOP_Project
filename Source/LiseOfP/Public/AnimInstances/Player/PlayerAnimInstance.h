@@ -10,34 +10,42 @@ class APlayerCharacter;
 /**
  *
  */
+// í”Œë ˆì´ì–´ ì „ìš© ì• ë‹˜ ì¸ìŠ¤í„´ìŠ¤
 UCLASS()
 class LISEOFP_API UPlayerAnimInstance : public UCharacterAnimInstance
 {
 	GENERATED_BODY()
 
 public:
-	//¾Ö´Ï¸ŞÀÌ¼Ç ÀÎ½ºÅÏ½º°¡ »ı¼ºµÉ ¶§ È£ÃâµÇ¸ç, ÇÊ¿äÇÑ ÃÊ±â ¼³Á¤À» ¼öÇàÇÕ´Ï´Ù.
+// ì• ë‹˜ ì¸ìŠ¤í„´ìŠ¤ ì´ˆê¸°í™”
+// í‹±ë§ˆë‹¤ ì• ë‹˜ ê°±ì‹ 
+// ì†Œìœ ì¤‘ì¸ í”Œë ˆì´ì–´ ìºë¦­í„°
+// ë¦´ë™ìŠ¤ ìƒíƒœ ì§„ì… ì—¬ë¶€
+// ë¦´ë™ìŠ¤ ìƒíƒœ ì „í™˜ ì‹œê°„
+// ëŒ€ê¸° ì‹œê°„ ëˆ„ì ê°’
+// ê±·ê¸° ìƒíƒœ ì—¬ë¶€
+	//ì• ë‹ˆë©”ì´ì…˜ ì¸ìŠ¤í„´ìŠ¤ê°€ ìƒì„±ë  ë•Œ í˜¸ì¶œë˜ë©°, í•„ìš”í•œ ì´ˆê¸° ì„¤ì •ì„ ìˆ˜í–‰í•©ë‹ˆë‹¤.
 	virtual void NativeInitializeAnimation() override;
 
-	//¸Å ÇÁ·¹ÀÓ¸¶´Ù È£ÃâµÇ¾î ¾Ö´Ï¸ŞÀÌ¼Ç »óÅÂ¸¦ ¾÷µ¥ÀÌÆ®ÇÕ´Ï´Ù.
+	//ë§¤ í”„ë ˆì„ë§ˆë‹¤ í˜¸ì¶œë˜ì–´ ì• ë‹ˆë©”ì´ì…˜ ìƒíƒœë¥¼ ì—…ë°ì´íŠ¸í•©ë‹ˆë‹¤.
 	virtual void NativeThreadSafeUpdateAnimation(float DeltaSeconds);
 
 protected:
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "AnimData|Refrences")
 	APlayerCharacter* OwningPlayerCharacter;
 
-	// ¸±·º½º »óÅÂ·Î ÀüÈ¯ÇÒÁö ¿©ºÎ¸¦ ³ªÅ¸³»´Â º¯¼ö
+	// ë¦´ë ‰ìŠ¤ ìƒíƒœë¡œ ì „í™˜í• ì§€ ì—¬ë¶€ë¥¼ ë‚˜íƒ€ë‚´ëŠ” ë³€ìˆ˜
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "AnimData|LocomotionData")
 	bool bShouldEnterRelaxState;
 
-	// ¸±·º½º »óÅÂ·Î ÀüÈ¯ÇÏ±â À§ÇÑ ÀÓ°è°ª
+	// ë¦´ë ‰ìŠ¤ ìƒíƒœë¡œ ì „í™˜í•˜ê¸° ìœ„í•œ ì„ê³„ê°’
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "AnimData|LocomotionData")
 	float  EnterRelaxtStateThreshold = 0.5f;
 
-	// ÇöÀç ÇÃ·¹ÀÌ¾î°¡ ¸±·º½º »óÅÂÀÎÁö
+	// í˜„ì¬ í”Œë ˆì´ì–´ê°€ ë¦´ë ‰ìŠ¤ ìƒíƒœì¸ì§€
 	float IdleElpasedTime = 0.f;
 
-	// ÇöÀç ÇÃ·¹ÀÌ¾î°¡ °È´Â	»óÅÂÀÎÁö
+	// í˜„ì¬ í”Œë ˆì´ì–´ê°€ ê±·ëŠ”	ìƒíƒœì¸ì§€
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, Category = "AnimData|LocomotionData")
 	bool bWalkState;
 };

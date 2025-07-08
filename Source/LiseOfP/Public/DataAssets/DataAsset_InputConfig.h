@@ -10,22 +10,26 @@
 class UInputAction;
 class UInputMappingContext;
 
+// 입력 액션 설정 구조체
 USTRUCT(BlueprintType)
 struct FInputActionConfig
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Categories = "GameplayTags"))
-	FGameplayTag InputTag;
+    // 입력을 식별할 태그
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (Categories = "GameplayTags"))
+    FGameplayTag InputTag;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UInputAction* InputAction;
+    // 매핑될 입력 액션
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    UInputAction* InputAction;
 
-	bool IsVaild() const
-	{
-		return InputTag.IsValid() && InputAction;
-	}
+    // 설정이 유효한지 확인
+    bool IsVaild() const
+    {
+        return InputTag.IsValid() && InputAction;
+    }
 
 };
 
@@ -33,6 +37,7 @@ public:
 /**
  * 
  */
+// 입력 구성을 저장하는 데이터 에셋
 UCLASS()
 class LISEOFP_API UDataAsset_InputConfig : public UDataAsset
 {
@@ -40,14 +45,18 @@ class LISEOFP_API UDataAsset_InputConfig : public UDataAsset
 	
 
 public:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
-	UInputMappingContext* DefaultMappingContext;
+    // 기본 입력 매핑 컨텍스트
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+    UInputMappingContext* DefaultMappingContext;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "InputTag"))
-	TArray<FInputActionConfig> NativeInputActions;
+    // 기본 입력 액션 목록
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "InputTag"))
+    TArray<FInputActionConfig> NativeInputActions;
 
-	UInputAction* FindNativeInputActionByTag(const FGameplayTag& InInputTag) const;
+    // 태그로 입력 액션 검색
+    UInputAction* FindNativeInputActionByTag(const FGameplayTag& InInputTag) const;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "InputTag"))
-	TArray<FInputActionConfig> AbilityInputActions;
+    // 어빌리티 입력 액션 목록
+    UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, meta = (TitleProperty = "InputTag"))
+    TArray<FInputActionConfig> AbilityInputActions;
 };
